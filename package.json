@@ -1,0 +1,31 @@
+{
+	"name": "glitch-static-cache",
+	"version": "1.0.0",
+	"description": "Cache your static builds on Glitch to avoid startup times",
+	"main": "src/index.js",
+	"bin": {
+		"glitch-cache": "echo '@todo'"
+	},
+	"repository": {
+		"type": "git",
+		"url": "@TODO"
+	},
+	"license": "MIT",
+	"author": "Joshua Tzucker",
+	"homepage": "@TODO",
+	"keywords": [
+		"glitch cache",
+		"glitch startup",
+		"glitch.com"
+	],
+	"scripts": {
+		"build": "echo '@todo'"
+	},
+	"dependencies": {
+		"detect-is-on-glitch": "^1.0.0"
+	},
+	"devDependencies": {
+		"@types/node": "^14.0.23",
+		"prettier": "^2.0.5"
+	}
+}

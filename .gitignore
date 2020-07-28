@@ -2,3 +2,4 @@ node_modules
 .yalc
 yarn-error.log
 build
+dist

@@ -2,21 +2,24 @@ interface FrameworkSetting {
 	name: string;
 	buildDirName: string;
 	buildCmd: string;
+	hasPackageJson: boolean;
 	serveCmd?: string;
 }
 
 interface Config {
 	projectRoot: string;
-	buildDirName: string;
-	buildCmd: string;
+	projectRootFull: string;
+	buildDir: string;
+	buildDirFull: string;
+	buildCmd?: string;
 	useGit: boolean;
 	silent: boolean;
-	cacheDirName?: string;
+	cacheFileName?: string;
 	serveCmd?: string;
 }
 
 interface PersistedData {
-	built: number;
+	builtAt: number;
 	commitSha?: string;
 	buildDirName?: string;
 }

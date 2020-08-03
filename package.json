@@ -2,9 +2,9 @@
 	"name": "glitch-static-cache",
 	"version": "1.0.0",
 	"description": "Cache your static builds on Glitch to avoid startup times",
-	"main": "src/index.js",
+	"main": "disc/main.js",
 	"bin": {
-		"glitch-cache": "echo '@todo'"
+		"glitch-cache": "dist/cli.js"
 	},
 	"repository": {
 		"type": "git",
@@ -19,10 +19,12 @@
 		"glitch.com"
 	],
 	"scripts": {
-		"build": "echo '@todo'",
+		"dev": "nodemon -e js,ts --ignore dist --exec \"tsc --sourceMap && yalc push --changed\"",
+		"build": "shx rm -rf dist && shx mkdir dist && tsc",
 		"format": "yarn prettier --check src",
 		"test": "echo 'no tests yet :('",
-		"scratch": "SET GLITCH_SHARED_INCLUDES_LEGACY_CLS=\"true\" && ts-node --transpile-only src/cli.ts && echo 'exited!'"
+		"scratch": "SET GLITCH_SHARED_INCLUDES_LEGACY_CLS=\"true\" && ts-node --transpile-only src/cli.ts -p ./dist && echo 'exited!'",
+		"local-publish": "yarn build && yalc push"
 	},
 	"dependencies": {
 		"commander": "^6.0.0",
@@ -31,6 +33,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "^14.0.23",
+		"nodemon": "^2.0.4",
 		"prettier": "2.0.5",
 		"shx": "^0.3.2",
 		"type-fest": "^0.16.0"

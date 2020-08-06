@@ -1,21 +1,32 @@
 import * as fs from 'fs';
 import { CacheFileName } from './constants';
 import Logger from './logger';
+import { Config, PersistedData } from './types';
 import { getLastCommitSha } from './utilities';
 
 function getCacheFilePath(config: Config): string {
 	return `${config.projectRootFull}/${CacheFileName}`;
 }
 
-export async function writeDataToFile(data: PersistedData, config: Config) {
+/**
+ * Save cache meta info to file
+ * @param data Data to store in cache meta file
+ * @param config
+ * @returns cacheFilePath - where the cache info file is stored
+ */
+export async function writeDataToFile(
+	data: PersistedData,
+	config: Config
+): Promise<string> {
 	return new Promise((res, rej) => {
+		const cacheFilePath = getCacheFilePath(config);
 		fs.writeFile(
-			`${getCacheFilePath(config)}`,
+			`${cacheFilePath}`,
 			JSON.stringify(data, null, '\t'),
 			{ flag: 'wx' },
 			(err) => {
 				if (err) rej(err);
-				res();
+				res(cacheFilePath);
 			}
 		);
 	});

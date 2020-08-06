@@ -1,3 +1,5 @@
+import { Config } from './types';
+
 export class Logger {
 	config: Config;
 	silent: boolean;

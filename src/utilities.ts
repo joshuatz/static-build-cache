@@ -1,16 +1,41 @@
-import * as childProc from 'child_process';
-import { ExecOptions } from 'child_process';
+import { exec, ExecOptions, spawn } from 'child_process';
 import * as fs from 'fs';
 import { normalize } from 'path';
 import { PackageJson } from 'type-fest';
 import { BuildCmds, FrameworkDefaults, ServeCmds } from './constants';
+import { Config, FrameworkSetting } from './types';
 
+export async function getLastCommitSha(): Promise<string>;
+export async function getLastCommitSha(full: boolean): Promise<string>;
+export async function getLastCommitSha(
+	full: boolean,
+	silent: boolean
+): Promise<string | undefined>;
 /**
  * Get the last commit SHA (Git)
  * @param [full] Get full SHA vs abbreviated
  */
-export async function getLastCommitSha(full = true): Promise<string> {
-	return execAsync(`git rev-parse${full ? `` : ` --short`} HEAD`);
+export async function getLastCommitSha(
+	full = true,
+	silent = false
+): Promise<string | undefined> {
+	console.log({
+		full,
+		silent,
+	});
+	let sha;
+	try {
+		console.log('asdadsf');
+		sha = execAsync(`git rev-parse${full ? `` : ` --short`} HEAD`);
+		return sha;
+	} catch (e) {
+		console.log('asdfadsfafdsasd');
+		if (silent) {
+			return undefined;
+		}
+
+		throw e;
+	}
 }
 
 /**
@@ -60,13 +85,6 @@ export async function detectFramework(config: Config): Promise<FrameworkSetting 
 				serveCmd = packageInfo.scripts[cmd] ? cmd : serveCmd;
 				if (serveCmd) break;
 			}
-
-			/*
-			// Prefix with NodeJS runner
-			const scriptRunPrefix = `npm run `;
-			buildCmd = buildCmd ? `${scriptRunPrefix}${buildCmd}` : buildCmd;
-			serveCmd = serveCmd ? `${scriptRunPrefix}${serveCmd}` : serveCmd;
-			*/
 		}
 	} catch (e) {
 		console.warn(`Could not find package.json`);
@@ -105,16 +123,90 @@ export async function detectFramework(config: Config): Promise<FrameworkSetting 
 	}
 }
 
-export async function execAsync(input: string, opts?: ExecOptions): Promise<string> {
+export function execAsync(input: string, opts?: ExecOptions): Promise<string> {
 	return new Promise((res, rej) => {
-		childProc.exec(input, opts || {}, (err, out) => {
-			if (err) {
-				rej(err);
-				return;
-			}
+		try {
+			const childProc = exec(input, opts || {}, (err, out) => {
+				if (err) {
+					rej(err);
+					return;
+				}
 
-			res(out);
+				res(out);
+			}).on('exit', () => {
+				rej();
+			});
+			childProc.on('error', () => {
+				rej();
+			});
+			childProc.on('exit', () => {
+				rej();
+			});
+		} catch (e) {
+			rej(e);
+		}
+	});
+}
+
+/**
+ * Execute a command with child-process, and receive data via callbacks
+ * @param input cmd to execute
+ * @param args Optional arguments to pass
+ * @param opts Options
+ * @param callbacks Receive data stream from child process
+ * @param encoding
+ */
+export async function execAsyncWithCbs(
+	cmd: string,
+	args: string[] = [],
+	opts?: ExecOptions,
+	callbacks?: {
+		stdout?: (output: string) => void | Function;
+		stderr?: (output: string) => void | Function;
+		close?: (output: string) => void | Function;
+	},
+	encoding: BufferEncoding = 'utf8'
+): Promise<string> {
+	return new Promise((res, rej) => {
+		let output = '';
+		const spawnedProc = spawn(cmd, args, {
+			shell: true,
+			windowsHide: true,
+			...opts,
 		});
+		// Attach listeners
+		const stdoutCb = callbacks?.stdout || (() => {});
+		const stderrCb = callbacks?.stderr || (() => {});
+		// Listeners - stdout
+		spawnedProc.stdout.setEncoding(encoding);
+		spawnedProc.stdout.on('data', (data) => {
+			data = data.toString();
+			output += data;
+			stdoutCb(data);
+		});
+		// Listeners - stderr
+		spawnedProc.stderr.setEncoding(encoding);
+		spawnedProc.stderr.on('data', (data) => {
+			data = data.toString();
+			output += data;
+			stderrCb(data);
+		});
+		// Listeners - close
+		if (callbacks?.close) {
+			spawnedProc.on('close', callbacks.close);
+		}
+
+		// Collect output and return
+		spawnedProc.on('exit', (exitCode) => {
+			const success: boolean = exitCode === 0;
+			if (success) {
+				res(output);
+			} else {
+				rej(output);
+			}
+		});
+
+		spawnedProc.on('error', rej);
 	});
 }
 

@@ -1,4 +1,4 @@
-interface FrameworkSetting {
+export interface FrameworkSetting {
 	name: string;
 	buildDirName: string;
 	buildCmd: string;
@@ -6,7 +6,7 @@ interface FrameworkSetting {
 	serveCmd?: string;
 }
 
-interface Config {
+export interface Config {
 	projectRoot: string;
 	projectRootFull: string;
 	buildDir: string;
@@ -18,7 +18,9 @@ interface Config {
 	serveCmd?: string;
 }
 
-interface PersistedData {
+export type MinConfig = Partial<Config> & Pick<Config, 'projectRoot'>;
+
+export interface PersistedData {
 	builtAt: number;
 	commitSha?: string;
 	buildDirName?: string;

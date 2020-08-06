@@ -3,6 +3,7 @@ import { Command } from 'commander';
 import detectIsOnGlitch from 'detect-is-on-glitch';
 import { PackageJson } from 'type-fest';
 import { main } from './main';
+import { MinConfig } from './types';
 // import * as PackageRaw from '../package.json';
 const PackageRaw = require('../package.json');
 
@@ -35,7 +36,7 @@ const cli = async () => {
 		process.exit(0);
 	} else {
 		program.parse(process.argv);
-		const inputConfig: Partial<Config> = {
+		const inputConfig: MinConfig = {
 			projectRoot: program.projectRoot,
 			buildDir: program.buildDir,
 			buildCmd: program.buildCmd,

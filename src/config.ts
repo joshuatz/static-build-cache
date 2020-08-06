@@ -1,7 +1,8 @@
 import { CacheFileName } from './constants';
+import { Config, MinConfig } from './types';
 import { posixNormalize, resolveMixedPath } from './utilities';
 
-export async function processConfig(config: Partial<Config>): Promise<Config> {
+export async function processConfig(config: MinConfig): Promise<Config> {
 	if (!config.projectRoot) {
 		throw new Error('Config needs the project root path for basic functionality');
 	}

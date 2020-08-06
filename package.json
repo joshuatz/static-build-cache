@@ -2,7 +2,7 @@
 	"name": "glitch-static-cache",
 	"version": "1.0.0",
 	"description": "Cache your static builds on Glitch to avoid startup times",
-	"main": "disc/main.js",
+	"main": "dist/main.js",
 	"bin": {
 		"glitch-cache": "dist/cli.js"
 	},
@@ -19,12 +19,16 @@
 		"glitch.com"
 	],
 	"scripts": {
-		"dev": "nodemon -e js,ts --ignore dist --exec \"tsc --sourceMap && yalc push --changed\"",
-		"build": "shx rm -rf dist && shx mkdir dist && tsc",
+		"dev": "yarn clean && nodemon -e js,ts --ignore dist --exec \"tsc --sourceMap && yalc push --changed\"",
+		"dev-two": "yarn clean && nodemon -e js,ts --ignore dist --exec \"tsc --sourceMap --sourceRoot src && yalc push --changed\"",
+		"clean": "shx rm -rf dist && shx mkdir dist",
+		"build": "yarn clean && tsc",
 		"format": "yarn prettier --check src",
 		"test": "echo 'no tests yet :('",
 		"scratch": "SET GLITCH_SHARED_INCLUDES_LEGACY_CLS=\"true\" && ts-node --transpile-only src/cli.ts -p ./dist && echo 'exited!'",
-		"local-publish": "yarn build && yalc push"
+		"scratch-js": "SET GLITCH_SHARED_INCLUDES_LEGACY_CLS=\"true\" && node --inspect-brk test.js",
+		"local-publish": "yarn build && yalc push",
+		"list-files": "yalc publish --files"
 	},
 	"dependencies": {
 		"commander": "^6.0.0",
@@ -36,6 +40,7 @@
 		"nodemon": "^2.0.4",
 		"prettier": "2.0.5",
 		"shx": "^0.3.2",
-		"type-fest": "^0.16.0"
+		"type-fest": "^0.16.0",
+		"typescript": "^3.9.7"
 	}
 }

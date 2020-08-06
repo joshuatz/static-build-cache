@@ -1,3 +1,4 @@
+import { FrameworkSetting } from './types';
 import { posixNormalize } from './utilities';
 
 export const BuildCmds = {

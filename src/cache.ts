@@ -23,7 +23,7 @@ export async function writeDataToFile(
 		fs.writeFile(
 			`${cacheFilePath}`,
 			JSON.stringify(data, null, '\t'),
-			{ flag: 'wx' },
+			{ flag: 'w' },
 			(err) => {
 				if (err) rej(err);
 				res(cacheFilePath);
@@ -60,7 +60,7 @@ export async function canServeFromCache(config: Config): Promise<boolean> {
 			return false;
 		}
 
-		const lastCommitSha = await getLastCommitSha();
+		const lastCommitSha = await getLastCommitSha(true, false, config.projectRootFull);
 		return lastCommitSha === storedMeta.commitSha;
 	} catch (e) {
 		// If this is running Glitch, `git` should be available...

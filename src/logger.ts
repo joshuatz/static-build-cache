@@ -1,10 +1,12 @@
 import { Config } from './types';
 
+type LoggerConfig = Pick<Config, 'silent'>;
+
 export class Logger {
-	config: Config;
+	config: LoggerConfig;
 	silent: boolean;
 
-	constructor(config: Config) {
+	constructor(config: LoggerConfig) {
 		this.config = config;
 		// this.silent = config.silent;
 		this.silent = false;

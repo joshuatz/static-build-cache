@@ -1,36 +1,34 @@
-import { exec, ExecOptions, spawn } from 'child_process';
+import {
+	ChildProcess,
+	ChildProcessWithoutNullStreams,
+	exec,
+	ExecOptions,
+	ExecSyncOptions,
+	spawn,
+} from 'child_process';
 import * as fs from 'fs';
 import { normalize } from 'path';
 import { PackageJson } from 'type-fest';
 import { BuildCmds, FrameworkDefaults, ServeCmds } from './constants';
 import { Config, FrameworkSetting } from './types';
 
-export async function getLastCommitSha(): Promise<string>;
-export async function getLastCommitSha(full: boolean): Promise<string>;
-export async function getLastCommitSha(
-	full: boolean,
-	silent: boolean
-): Promise<string | undefined>;
 /**
  * Get the last commit SHA (Git)
  * @param [full] Get full SHA vs abbreviated
  */
 export async function getLastCommitSha(
 	full = true,
-	silent = false
+	noFail = false,
+	rootDir?: string
 ): Promise<string | undefined> {
-	console.log({
-		full,
-		silent,
-	});
 	let sha;
+	const opts = rootDir ? { cwd: rootDir } : {};
 	try {
-		console.log('asdadsf');
-		sha = execAsync(`git rev-parse${full ? `` : ` --short`} HEAD`);
-		return sha;
+		sha = await execAsync(`git rev-parse${full ? `` : ` --short`} HEAD`, opts);
+		// Remove any trailing spaces and/or carriage returns
+		return sha.replace(/[\s]/g, '');
 	} catch (e) {
-		console.log('asdfadsfafdsasd');
-		if (silent) {
+		if (noFail) {
 			return undefined;
 		}
 
@@ -48,9 +46,10 @@ export async function detectFramework(config: Config): Promise<FrameworkSetting 
 	let serveCmd;
 	let hasPackageJson = false;
 	// Attempt to get package.json
+	const packageJsonPath = `${config.projectRootFull}/package.json`;
 	try {
 		const packageInfo: PackageJson = JSON.parse(
-			fs.readFileSync(`${config.projectRootFull}/package.json`).toString()
+			fs.readFileSync(packageJsonPath).toString()
 		);
 		hasPackageJson = true;
 
@@ -87,7 +86,7 @@ export async function detectFramework(config: Config): Promise<FrameworkSetting 
 			}
 		}
 	} catch (e) {
-		console.warn(`Could not find package.json`);
+		console.warn(`Could not find package.json at path ${packageJsonPath}`);
 	}
 
 	// Return framework settings, overriding with any detected specifics
@@ -123,24 +122,21 @@ export async function detectFramework(config: Config): Promise<FrameworkSetting 
 	}
 }
 
-export function execAsync(input: string, opts?: ExecOptions): Promise<string> {
+export async function execAsync(input: string, opts?: ExecSyncOptions): Promise<string> {
+	let callOpts = opts || {};
+	callOpts = {
+		encoding: 'utf8',
+		...callOpts,
+	};
 	return new Promise((res, rej) => {
 		try {
-			const childProc = exec(input, opts || {}, (err, out) => {
+			const childProc = exec(input, callOpts, (err, out) => {
 				if (err) {
 					rej(err);
 					return;
 				}
 
 				res(out);
-			}).on('exit', () => {
-				rej();
-			});
-			childProc.on('error', () => {
-				rej();
-			});
-			childProc.on('exit', () => {
-				rej();
 			});
 		} catch (e) {
 			rej(e);
@@ -164,6 +160,7 @@ export async function execAsyncWithCbs(
 		stdout?: (output: string) => void | Function;
 		stderr?: (output: string) => void | Function;
 		close?: (output: string) => void | Function;
+		receiveProc?: (proc: ChildProcess | ChildProcessWithoutNullStreams) => void;
 	},
 	encoding: BufferEncoding = 'utf8'
 ): Promise<string> {
@@ -174,6 +171,10 @@ export async function execAsyncWithCbs(
 			windowsHide: true,
 			...opts,
 		});
+		// Pass to callback
+		if (callbacks?.receiveProc) {
+			callbacks.receiveProc(spawnedProc);
+		}
 		// Attach listeners
 		const stdoutCb = callbacks?.stdout || (() => {});
 		const stderrCb = callbacks?.stderr || (() => {});
@@ -240,4 +241,36 @@ export function resolveMixedPath(inputPath: string, baseDirAbs: string): string 
 		// Assume projectRoot is *relative*
 		return posixNormalize(`${baseDirAbs}/${inputPath.replace(/^[\\\/\.]*/, '')}`);
 	}
+}
+
+/**
+ * Exit the entire program, clean up if necessary
+ */
+export async function exitProgram(exitCode: number = 0, cleanup?: Array<ChildProcess>) {
+	/**
+	 * Clean up processes
+	 *  - This might still leave detached services / processes
+	 *  - SIGINT seems to work better than SIGHUP
+	 */
+	const procsToKill: Array<ChildProcess> = Array.isArray(cleanup) ? cleanup : [];
+	const runningProcs = global.RUNNING_PROCS || {};
+	if (global.RUNNING_PROCS && typeof global.RUNNING_PROCS === 'object') {
+		Object.keys(runningProcs).forEach((key) => {
+			const procKey = key as keyof typeof runningProcs;
+			if (runningProcs[procKey]) {
+				procsToKill.push(runningProcs[procKey]!);
+			}
+		});
+	}
+
+	console.log(`Killing processes - ${procsToKill.length}`, procsToKill);
+	procsToKill.forEach((proc) => proc.kill('SIGINT'));
+
+	// @TODO REMOVE - TESTING
+	await new Promise((res) => {
+		setTimeout(res, 2000);
+	});
+
+	console.log(`Exiting`);
+	process.exit(exitCode);
 }

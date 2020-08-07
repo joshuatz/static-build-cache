@@ -4,10 +4,14 @@ import detectIsOnGlitch from 'detect-is-on-glitch';
 import { PackageJson } from 'type-fest';
 import { main } from './main';
 import { MinConfig } from './types';
-// import * as PackageRaw from '../package.json';
 const PackageRaw = require('../package.json');
 
 const packageInfo: PackageJson = PackageRaw;
+
+/**
+ * Set GLOBAL flag
+ */
+global.IS_CLI = true;
 
 /**
  * Setup Commander CLI Helper

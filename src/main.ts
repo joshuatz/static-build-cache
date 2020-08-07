@@ -2,13 +2,27 @@ import { canServeFromCache, writeDataToFile } from './cache';
 import { processConfig } from './config';
 import { PackageRoot } from './constants';
 import Logger from './logger';
-import { MinConfig } from './types';
-import { detectFramework, execAsyncWithCbs, getLastCommitSha } from './utilities';
+import { MinConfig, PersistedData } from './types';
+import {
+	detectFramework,
+	execAsyncWithCbs,
+	exitProgram,
+	getLastCommitSha,
+} from './utilities';
+
+// Catch SIGINT and close out program
+process.on('SIGINT', (signal) => {
+	exitProgram();
+});
 
 export async function main(inputConfig: MinConfig) {
 	const config = await processConfig(inputConfig);
 	const logger = new Logger(config);
 	const frameworkSettings = await detectFramework(config);
+	global.RUNNING_PROCS = {
+		serve: undefined,
+		build: undefined,
+	};
 
 	if (!frameworkSettings) {
 		return;
@@ -17,7 +31,7 @@ export async function main(inputConfig: MinConfig) {
 	// Compute final commands
 	const buildCmd = config.buildCmd || frameworkSettings.buildCmd;
 	let serveCmd = config.serveCmd || frameworkSettings.serveCmd;
-	const callbacks = {
+	const callbacks: Parameters<typeof execAsyncWithCbs>[3] = {
 		stdout: logger.log.bind(logger),
 		stderr: logger.error.bind(logger),
 	};
@@ -33,25 +47,32 @@ export async function main(inputConfig: MinConfig) {
 	// Build
 	if (needsFreshBuild) {
 		logger.log('Getting a fresh build...');
+		// Start build process and get result
 		const buildResult = await execAsyncWithCbs(
 			buildCmd,
 			undefined,
 			{ cwd: config.projectRootFull },
-			callbacks
+			{
+				...callbacks,
+				receiveProc: (proc) => {
+					global.RUNNING_PROCS!.build = proc;
+				},
+			}
 		);
+		global.RUNNING_PROCS!.build = undefined;
 		// Cache build info
 		const buildTime = new Date();
-		const cacheFilePath = await writeDataToFile(
-			{
-				builtAt: buildTime.getTime(),
-				buildDirName: config.buildDirFull,
-				commitSha: await getLastCommitSha(true, true),
-			},
-			config
-		);
+		const lastCommitSha = await getLastCommitSha(true, true, config.projectRootFull);
+		const cacheData: PersistedData = {
+			builtAt: buildTime.getTime(),
+			buildDirName: config.buildDirFull,
+			commitSha: lastCommitSha,
+		};
+		const cacheFilePath = await writeDataToFile(cacheData, config);
 		logger.log(`Fresh build finished @${new Date()}`, {
 			buildResult,
 			cacheFilePath,
+			cacheData,
 		});
 	} else {
 		logger.log('Skipping build - serving from cache');
@@ -61,14 +82,22 @@ export async function main(inputConfig: MinConfig) {
 		let serveRes: string;
 		logger.log(`Starting serve command @${new Date()}`);
 		if (serveCmd) {
+			// Start serve process and await result
 			serveRes = await execAsyncWithCbs(
 				serveCmd,
 				undefined,
 				{ cwd: config.projectRootFull },
-				callbacks
+				{
+					...callbacks,
+					receiveProc: (proc) => {
+						global.RUNNING_PROCS!.serve = proc;
+					},
+				}
 			);
+			// Exited
+			global.RUNNING_PROCS!.serve = undefined;
 		} else {
-			// Fallback to serving with bundled serving dependency (must be exected from inside package)
+			// Fallback to serving with bundled serving dependency (must be executed from inside package)
 			logger.warn(
 				`Serve command was not specified. Using bundled server and build directory.`
 			);
@@ -78,7 +107,12 @@ export async function main(inputConfig: MinConfig) {
 				serveCmd,
 				undefined,
 				{ cwd: PackageRoot },
-				callbacks
+				{
+					...callbacks,
+					receiveProc: (proc) => {
+						global.RUNNING_PROCS!.serve = proc;
+					},
+				}
 			);
 		}
 	} catch (e) {

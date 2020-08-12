@@ -1,34 +1,19 @@
-import { Config } from './types';
-
-type LoggerConfig = Pick<Config, 'silent'>;
-
-export class Logger {
-	config: LoggerConfig;
-	silent: boolean;
-
-	constructor(config: LoggerConfig) {
-		this.config = config;
-		// this.silent = config.silent;
-		this.silent = false;
-	}
-
-	public log(...args: any[]) {
-		if (!this.silent) {
+export const logger = {
+	log: (...args: any[]) => {
+		if (!global.SILENT) {
 			console.log.apply(console, args);
 		}
-	}
-
-	public warn(...args: any[]) {
-		if (!this.silent) {
+	},
+	warn: (...args: any[]) => {
+		if (!global.SILENT) {
 			console.warn.apply(console, args);
 		}
-	}
-
-	public error(...args: any[]) {
-		if (!this.silent) {
+	},
+	error: (...args: any[]) => {
+		if (!global.SILENT) {
 			console.error.apply(console, args);
 		}
-	}
-}
+	},
+};
 
-export default Logger;
+export default logger;

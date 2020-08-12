@@ -10,6 +10,7 @@ import * as fs from 'fs';
 import { normalize } from 'path';
 import { PackageJson } from 'type-fest';
 import { BuildCmds, FrameworkDefaults, ServeCmds } from './constants';
+import logger from './logger';
 import { Config, FrameworkSetting } from './types';
 
 /**
@@ -160,8 +161,10 @@ export async function execAsyncWithCbs(
 		stdout?: (output: string) => void | Function;
 		stderr?: (output: string) => void | Function;
 		close?: (output: string) => void | Function;
+		onExit?: (exitCode: number | null, output?: string) => void | Function;
 		receiveProc?: (proc: ChildProcess | ChildProcessWithoutNullStreams) => void;
 	},
+	failOnNonZeroExit = true,
 	encoding: BufferEncoding = 'utf8'
 ): Promise<string> {
 	return new Promise((res, rej) => {
@@ -200,7 +203,10 @@ export async function execAsyncWithCbs(
 		// Collect output and return
 		spawnedProc.on('exit', (exitCode) => {
 			const success: boolean = exitCode === 0;
-			if (success) {
+			if (callbacks?.onExit) {
+				callbacks.onExit(exitCode, output);
+			}
+			if (success || failOnNonZeroExit === false) {
 				res(output);
 			} else {
 				rej(output);
@@ -263,14 +269,14 @@ export async function exitProgram(exitCode: number = 0, cleanup?: Array<ChildPro
 		});
 	}
 
-	console.log(`Killing processes - ${procsToKill.length}`, procsToKill);
+	if (global.SERVER && typeof global.SERVER.close === 'function') {
+		logger.log('Shutting down server');
+		await new Promise((res) => global.SERVER!.close(res));
+	}
+
+	logger.log(`Killing processes - IDs: ${procsToKill.map((proc) => proc.pid)}`);
 	procsToKill.forEach((proc) => proc.kill('SIGINT'));
 
-	// @TODO REMOVE - TESTING
-	await new Promise((res) => {
-		setTimeout(res, 2000);
-	});
-
-	console.log(`Exiting`);
+	logger.log(`Exiting`);
 	process.exit(exitCode);
 }

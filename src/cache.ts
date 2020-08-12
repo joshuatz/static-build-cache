@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import { CacheFileName } from './constants';
-import Logger from './logger';
+import logger from './logger';
 import { Config, PersistedData } from './types';
 import { getLastCommitSha } from './utilities';
 
@@ -52,7 +52,6 @@ export async function getDataFromFile(
  * @param config Config options object
  */
 export async function canServeFromCache(config: Config): Promise<boolean> {
-	const logger = new Logger(config);
 	try {
 		const storedMeta = await getDataFromFile(config);
 
@@ -60,11 +59,25 @@ export async function canServeFromCache(config: Config): Promise<boolean> {
 			return false;
 		}
 
-		const lastCommitSha = await getLastCommitSha(true, false, config.projectRootFull);
-		return lastCommitSha === storedMeta.commitSha;
+		// Check git for changes
+		try {
+			const lastCommitSha = await getLastCommitSha(true, false, config.projectRootFull);
+			return lastCommitSha === storedMeta.commitSha;
+		} catch (e) {
+			// If this is running Glitch, `git` should be available...
+			logger.warn(`Use of git log failed:`, e);
+		}
+
+		// Fallback - check build time
+		const now = new Date();
+		const sinceLastBuildMs = Math.abs((storedMeta.builtAt || 0) - now.getTime());
+		logger.log({ sinceLastBuildMs });
+		if (sinceLastBuildMs < 5000) {
+			return true;
+		}
+
+		return false;
 	} catch (e) {
-		// If this is running Glitch, `git` should be available...
-		logger.warn(`Use of git log failed:`, e);
 		return false;
 	}
 }

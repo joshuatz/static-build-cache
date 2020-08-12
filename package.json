@@ -20,20 +20,17 @@
 	],
 	"scripts": {
 		"dev": "yarn clean && nodemon -e js,ts --ignore dist --exec \"tsc --sourceMap && yalc push --changed\"",
-		"dev-two": "yarn clean && nodemon -e js,ts --ignore dist --exec \"tsc --sourceMap --sourceRoot src && yalc push --changed\"",
 		"clean": "shx rm -rf dist && shx mkdir dist",
 		"build": "yarn clean && tsc",
+		"build-local": "yarn clean && tsc --sourceMap && yalc push",
 		"format": "yarn prettier --check src",
 		"test": "echo 'no tests yet :('",
-		"scratch": "SET GLITCH_SHARED_INCLUDES_LEGACY_CLS=\"true\" && ts-node --transpile-only src/cli.ts -p ./dist && echo 'exited!'",
-		"scratch-js": "SET GLITCH_SHARED_INCLUDES_LEGACY_CLS=\"true\" && node --inspect-brk test.js",
-		"local-publish": "yarn build && yalc push",
 		"list-files": "yalc publish --files"
 	},
 	"dependencies": {
 		"commander": "^6.0.0",
 		"detect-is-on-glitch": "^1.0.0",
-		"serve": "^11.3.2"
+		"local-web-server": "^4.2.1"
 	},
 	"devDependencies": {
 		"@types/node": "^14.0.23",

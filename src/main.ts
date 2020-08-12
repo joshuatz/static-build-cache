@@ -1,7 +1,7 @@
+import LocalWebServer = require('local-web-server');
 import { canServeFromCache, writeDataToFile } from './cache';
 import { processConfig } from './config';
-import { PackageRoot } from './constants';
-import Logger from './logger';
+import logger from './logger';
 import { MinConfig, PersistedData } from './types';
 import {
 	detectFramework,
@@ -17,7 +17,7 @@ process.on('SIGINT', (signal) => {
 
 export async function main(inputConfig: MinConfig) {
 	const config = await processConfig(inputConfig);
-	const logger = new Logger(config);
+	global.SILENT = config.silent;
 	const frameworkSettings = await detectFramework(config);
 	global.RUNNING_PROCS = {
 		serve: undefined,
@@ -79,11 +79,16 @@ export async function main(inputConfig: MinConfig) {
 	}
 
 	try {
-		let serveRes: string;
+		let serveResOutput: string;
+		const onServeDone = (output: string) => {
+			// Exited!
+			serveResOutput = output;
+			global.RUNNING_PROCS!.serve = undefined;
+		};
 		logger.log(`Starting serve command @${new Date()}`);
 		if (serveCmd) {
-			// Start serve process and await result
-			serveRes = await execAsyncWithCbs(
+			// Start serve process
+			execAsyncWithCbs(
 				serveCmd,
 				undefined,
 				{ cwd: config.projectRootFull },
@@ -92,32 +97,38 @@ export async function main(inputConfig: MinConfig) {
 					receiveProc: (proc) => {
 						global.RUNNING_PROCS!.serve = proc;
 					},
-				}
-			);
-			// Exited
-			global.RUNNING_PROCS!.serve = undefined;
+				},
+				false
+			).then(onServeDone);
 		} else {
 			// Fallback to serving with bundled serving dependency (must be executed from inside package)
 			logger.warn(
 				`Serve command was not specified. Using bundled server and build directory.`
 			);
-			serveCmd = `serve ${config.buildDirFull}`;
 
-			serveRes = await execAsyncWithCbs(
-				serveCmd,
-				undefined,
-				{ cwd: PackageRoot },
-				{
-					...callbacks,
-					receiveProc: (proc) => {
-						global.RUNNING_PROCS!.serve = proc;
-					},
-				}
-			);
+			const PORT = 3000;
+			const ws = LocalWebServer.create({
+				port: PORT,
+				directory: config.buildDirFull,
+			});
+			global.SERVER = ws.server;
+
+			// Catch server-up
+			ws.server.on('listening', () => {
+				logger.log(`Serving from http://localhost:${PORT} started @${new Date()}`);
+			});
 		}
 	} catch (e) {
 		logger.error(`Serving failed,`, e);
 	}
+
+	// Return some control methods
+	return {
+		forceExit: () => {
+			logger.log(`Force exiting!`);
+			exitProgram();
+		},
+	};
 }
 
 export default main;

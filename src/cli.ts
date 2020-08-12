@@ -26,8 +26,8 @@ program
 	.option(`-s, --serveCmd <commandStr>`, `Command string to trigger "serving"`)
 	.option(`-g, --useGit`, `Use git log to allow rebuilds`)
 	.option(
-		`--cacheDirName <desiredName>`,
-		`Specify the folder name you would like for the cache`
+		`--cacheFileName <desiredName>`,
+		`Specify the file name you would like for the cache`
 	)
 	.option(`-s, --silent`, `Suppress logging`)
 	.option(`--skipDetection`, `Skip "is on glitch" detection`);
@@ -36,7 +36,7 @@ const cli = async () => {
 	const isOnGlitch = await detectIsOnGlitch();
 	if (program.skipDetection !== true && !isOnGlitch) {
 		// Bail early, and allow chained commands to execute!
-		console.log('not on glitch');
+		console.error('not on glitch');
 		process.exit(0);
 	} else {
 		program.parse(process.argv);
@@ -46,8 +46,11 @@ const cli = async () => {
 			buildCmd: program.buildCmd,
 			serveCmd: program.serveCmd,
 			useGit: program.useGit,
+			cacheFileName: program.cacheFileName,
+			silent: program.silent,
 		};
 		await main(inputConfig);
+
 		// We need to exit, but not allow any chained commands (e.g. `start`) to run
 	}
 };

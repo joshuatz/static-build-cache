@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { CacheFileName } from './constants';
+import { CacheFileName, NonGitCacheDurationMs } from './constants';
 import logger from './logger';
 import { Config, PersistedData } from './types';
 import { getLastCommitSha } from './utilities';
@@ -51,18 +51,29 @@ export async function getDataFromFile(
  * Determine whether or not a rebuild is necessary based on last-build info
  * @param config Config options object
  */
-export async function canServeFromCache(config: Config): Promise<boolean> {
+export async function canServeFromCache(
+	config: Config
+): Promise<{ canServe: boolean; reason: string }> {
 	try {
 		const storedMeta = await getDataFromFile(config);
 
 		if (!storedMeta) {
-			return false;
+			return {
+				canServe: false,
+				reason: 'Could not find / parse cache meta file',
+			};
 		}
 
 		// Check git for changes
 		try {
 			const lastCommitSha = await getLastCommitSha(true, false, config.projectRootFull);
-			return lastCommitSha === storedMeta.commitSha;
+			const lastShaIsSame: boolean = lastCommitSha === storedMeta.commitSha;
+			return {
+				canServe: lastShaIsSame,
+				reason: lastShaIsSame
+					? 'last git SHA is identical'
+					: 'last git SHA changed - something was edited',
+			};
 		} catch (e) {
 			// If this is running Glitch, `git` should be available...
 			logger.warn(`Use of git log failed:`, e);
@@ -72,12 +83,14 @@ export async function canServeFromCache(config: Config): Promise<boolean> {
 		const now = new Date();
 		const sinceLastBuildMs = Math.abs((storedMeta.builtAt || 0) - now.getTime());
 		logger.log({ sinceLastBuildMs });
-		if (sinceLastBuildMs < 5000) {
-			return true;
-		}
-
-		return false;
+		return {
+			canServe: sinceLastBuildMs < NonGitCacheDurationMs,
+			reason: `Based on elapsed since last build time`,
+		};
 	} catch (e) {
-		return false;
+		return {
+			canServe: false,
+			reason: `Fatal error trying to determine cache status`,
+		};
 	}
 }

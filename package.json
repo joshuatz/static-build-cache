@@ -23,6 +23,7 @@
 		"clean": "shx rm -rf dist && shx mkdir dist",
 		"build": "yarn clean && tsc",
 		"build-local": "yarn clean && tsc --sourceMap && yalc push",
+		"build-zip": "yarn build && npm pack",
 		"format": "yarn prettier --check src",
 		"test": "echo 'no tests yet :('",
 		"list-files": "yalc publish --files"

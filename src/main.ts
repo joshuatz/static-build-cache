@@ -4,7 +4,7 @@ import { processConfig } from './config';
 import logger from './logger';
 import { MinConfig, PersistedData } from './types';
 import {
-	detectFramework,
+	detectPipeline,
 	execAsyncWithCbs,
 	exitProgram,
 	getLastCommitSha,
@@ -17,36 +17,38 @@ process.on('SIGINT', (signal) => {
 
 export async function main(inputConfig: MinConfig) {
 	const config = await processConfig(inputConfig);
-	global.SILENT = config.silent;
-	const frameworkSettings = await detectFramework(config);
+	const pipelineSettings = await detectPipeline(config);
 	global.RUNNING_PROCS = {
 		serve: undefined,
 		build: undefined,
 	};
 
-	if (!frameworkSettings) {
+	if (!pipelineSettings) {
 		return;
 	}
 
 	// Compute final commands
-	const buildCmd = config.buildCmd || frameworkSettings.buildCmd;
-	let serveCmd = config.serveCmd || frameworkSettings.serveCmd;
+	const buildCmd = config.buildCmd || pipelineSettings.buildCmd;
+	let serveCmd = config.serveCmd || pipelineSettings.serveCmd;
 	const callbacks: Parameters<typeof execAsyncWithCbs>[3] = {
 		stdout: logger.log.bind(logger),
 		stderr: logger.error.bind(logger),
 	};
+
+	// @TODO - remove me
 	logger.log({
 		config,
-		frameworkSettings,
+		pipelineSettings,
 		buildCmd,
 		serveCmd,
 	});
 
-	const needsFreshBuild = !(await canServeFromCache(config));
+	const cacheResult = await canServeFromCache(config);
+	const needsFreshBuild = !cacheResult.canServe;
 
 	// Build
 	if (needsFreshBuild) {
-		logger.log('Getting a fresh build...');
+		logger.log('Getting a fresh build...', cacheResult.reason);
 		// Start build process and get result
 		const buildResult = await execAsyncWithCbs(
 			buildCmd,
@@ -75,7 +77,7 @@ export async function main(inputConfig: MinConfig) {
 			cacheData,
 		});
 	} else {
-		logger.log('Skipping build - serving from cache');
+		logger.log('Skipping build - serving from cache', cacheResult.reason);
 	}
 
 	try {

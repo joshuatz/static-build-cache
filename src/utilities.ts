@@ -11,7 +11,7 @@ import { normalize } from 'path';
 import { PackageJson } from 'type-fest';
 import { BuildCmds, FrameworkDefaults, ServeCmds } from './constants';
 import logger from './logger';
-import { Config, FrameworkSetting } from './types';
+import { Config, PipelineSetting } from './types';
 
 /**
  * Get the last commit SHA (Git)
@@ -40,9 +40,8 @@ export async function getLastCommitSha(
 /**
  * Attemps to detect the framework being used and the build system
  */
-// @ts-ignore
-export async function detectFramework(config: Config): Promise<FrameworkSetting | null> {
-	let framework: FrameworkSetting | null = null;
+export async function detectPipeline(config: Config): Promise<PipelineSetting | null> {
+	let frameworkInfo: PipelineSetting | null = null;
 	let buildCmd;
 	let serveCmd;
 	let hasPackageJson = false;
@@ -56,14 +55,14 @@ export async function detectFramework(config: Config): Promise<FrameworkSetting 
 
 		// Try to detect specific framework used
 		if (packageInfo.dependencies !== undefined) {
-			framework =
-				!framework && !!packageInfo.dependencies['react']
+			frameworkInfo =
+				!frameworkInfo && !!packageInfo.dependencies['react']
 					? FrameworkDefaults.react
-					: framework;
-			framework =
-				!framework && !!packageInfo.dependencies['vue']
+					: frameworkInfo;
+			frameworkInfo =
+				!frameworkInfo && !!packageInfo.dependencies['vue']
 					? FrameworkDefaults.vue
-					: framework;
+					: frameworkInfo;
 		}
 
 		// Parse Scripts
@@ -92,8 +91,8 @@ export async function detectFramework(config: Config): Promise<FrameworkSetting 
 
 	// Return framework settings, overriding with any detected specifics
 	if (buildCmd) {
-		const info: FrameworkSetting = {
-			name: 'unknown',
+		const info: PipelineSetting = {
+			frameworkName: 'unknown',
 			buildCmd,
 			buildDirName: 'build',
 			serveCmd,
@@ -101,11 +100,15 @@ export async function detectFramework(config: Config): Promise<FrameworkSetting 
 		};
 
 		// Overrides
-		if (framework) {
-			let prop: keyof FrameworkSetting;
-			for (prop in framework) {
-				if (typeof framework[prop] !== 'undefined' && prop in info) {
-					(info as any)[prop] = framework[prop];
+		if (frameworkInfo) {
+			// Don't override `scripts` based settings, etc.
+			const allowedOverrides: Array<keyof PipelineSetting> = [
+				'frameworkName',
+				'buildDirName',
+			];
+			for (const prop of allowedOverrides) {
+				if (typeof frameworkInfo[prop] !== 'undefined' && prop in info) {
+					(info as any)[prop] = frameworkInfo[prop];
 				}
 			}
 		}

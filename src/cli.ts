@@ -36,7 +36,9 @@ const cli = async () => {
 	const isOnGlitch = await detectIsOnGlitch();
 	if (program.skipDetection !== true && !isOnGlitch) {
 		// Bail early, and allow chained commands to execute!
-		console.error('not on glitch');
+		if (!program.silent) {
+			console.error('not on glitch');
+		}
 		process.exit(0);
 	} else {
 		program.parse(process.argv);
@@ -50,8 +52,6 @@ const cli = async () => {
 			silent: program.silent,
 		};
 		await main(inputConfig);
-
-		// We need to exit, but not allow any chained commands (e.g. `start`) to run
 	}
 };
 

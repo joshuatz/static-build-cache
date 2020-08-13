@@ -1,13 +1,18 @@
 import { CacheFileName } from './constants';
+import { logger } from './logger';
 import { Config, MinConfig } from './types';
 import { posixNormalize, resolveMixedPath } from './utilities';
 
 export async function processConfig(config: MinConfig): Promise<Config> {
-	if (!config.silent) {
-		console.log('Processing config');
-	}
+	const silent: boolean = typeof config.silent === 'boolean' ? config.silent : false;
+	global.SILENT = config.silent;
+	logger.log(`Processing config`);
+
 	if (!config.projectRoot) {
-		throw new Error('Config needs the project root path for basic functionality');
+		logger.warn(
+			`Config did not specify project root; program will assume same as calling dir.`
+		);
+		config.projectRoot = '.';
 	}
 
 	const callingDir = posixNormalize(process.cwd());
@@ -29,7 +34,8 @@ export async function processConfig(config: MinConfig): Promise<Config> {
 		buildDirFull: config.buildDirFull,
 		buildCmd: config.buildCmd,
 		useGit: typeof config.useGit === 'boolean' ? config.useGit : true,
-		silent: typeof config.silent === 'boolean' ? config.silent : false,
+		silent,
 		cacheFileName: !!config.cacheFileName ? config.cacheFileName : CacheFileName,
+		serveCmd: config.serveCmd,
 	};
 }

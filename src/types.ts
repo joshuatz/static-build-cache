@@ -1,5 +1,5 @@
-export interface FrameworkSetting {
-	name: string;
+export interface PipelineSetting {
+	frameworkName: string;
 	buildDirName: string;
 	buildCmd: string;
 	hasPackageJson: boolean;
@@ -18,7 +18,7 @@ export interface Config {
 	serveCmd?: string;
 }
 
-export type MinConfig = Partial<Config> & Pick<Config, 'projectRoot'>;
+export type MinConfig = Partial<Config>;
 
 export interface PersistedData {
 	builtAt: number;

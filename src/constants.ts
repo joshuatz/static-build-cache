@@ -1,4 +1,4 @@
-import { FrameworkSetting } from './types';
+import { PipelineSetting } from './types';
 import { posixNormalize } from './utilities';
 
 export const BuildCmds = {
@@ -12,24 +12,25 @@ export const ServeCmds = {
 
 export type UnderstoodFrameworks = 'react' | 'vue';
 
-export const FrameworkDefaults: Record<UnderstoodFrameworks, FrameworkSetting> = {
+export const FrameworkDefaults: Record<UnderstoodFrameworks, PipelineSetting> = {
 	react: {
 		buildCmd: 'build',
 		buildDirName: 'build',
 		serveCmd: 'serve',
-		name: 'React',
+		frameworkName: 'React',
 		hasPackageJson: true,
 	},
 	vue: {
 		buildCmd: 'build',
 		buildDirName: 'dist',
 		serveCmd: 'serve',
-		name: 'Vue',
+		frameworkName: 'Vue',
 		hasPackageJson: true,
 	},
 };
 
 export const CacheFileName = '.glitch-cache-meta';
+export const NonGitCacheDurationMs = 1000 * 60 * 60;
 
 /**
  * Package root - no trailing slash

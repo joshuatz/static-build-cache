@@ -5,3 +5,4 @@ build
 dist
 yalc.lock
 scratch.txt
+*.tgz

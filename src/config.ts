@@ -20,11 +20,11 @@ export async function processConfig(config: MinConfig): Promise<Config> {
 	config.buildDir = config.buildDir ? posixNormalize(config.buildDir) : './build';
 
 	if (!config.projectRootFull) {
-		config.projectRootFull = resolveMixedPath(config.projectRoot, callingDir);
+		config.projectRootFull = resolveMixedPath(callingDir, config.projectRoot);
 	}
 
 	if (!config.buildDirFull) {
-		config.buildDirFull = resolveMixedPath(config.buildDir, config.projectRootFull);
+		config.buildDirFull = resolveMixedPath(config.projectRootFull, config.buildDir);
 	}
 
 	return {

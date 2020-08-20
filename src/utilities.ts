@@ -7,7 +7,7 @@ import {
 	spawn,
 } from 'child_process';
 import * as fs from 'fs';
-import { normalize } from 'path';
+import { isAbsolute, normalize } from 'path';
 import { PackageJson } from 'type-fest';
 import { BuildCmds, FrameworkDefaults, ServeCmds } from './constants';
 import logger from './logger';
@@ -240,11 +240,17 @@ export function removeTrailingSlash(input: string): string {
  * @param inputPath Mixed - relative or absolute path
  * @param basedDirAbs Absolute base directory path
  */
-export function resolveMixedPath(inputPath: string, baseDirAbs: string): string {
+export function resolveMixedPath(baseDirAbs: string, inputPath: string): string {
 	inputPath = posixNormalize(inputPath);
 	baseDirAbs = posixNormalize(baseDirAbs);
-	if (inputPath.includes(baseDirAbs)) {
-		// Since project root includes absolute root dir, assume same as full path
+	logger.log({
+		inputPath,
+		baseDirAbs,
+	});
+	if (inputPath.includes(baseDirAbs) || isAbsolute(inputPath)) {
+		// Assume input path *IS* full path, if...
+		// - Project root includes absolute root dir
+		// - Input path is determined to be absolute
 		return inputPath;
 	} else {
 		// Assume projectRoot is *relative*

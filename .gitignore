@@ -4,5 +4,6 @@ yarn-error.log
 build
 dist
 yalc.lock
-scratch.txt
+scratch.*
 *.tgz
+gsc-testruns

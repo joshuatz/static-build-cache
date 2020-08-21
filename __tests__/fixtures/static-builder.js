@@ -2,7 +2,7 @@
 // @ts-check
 const fs = require('fs');
 
-const checkVal = process.argv.slice(2)[0];
+const checkVal = process.argv.slice(2)[0] || '';
 
 const staticIndexHtml = `
 <!DOCTYPE html>
@@ -25,4 +25,5 @@ if (!fs.existsSync(buildDir)) {
 	fs.mkdirSync(buildDir);
 }
 fs.writeFileSync(`${buildDir}/index.html`, staticIndexHtml);
+fs.writeFileSync(`${buildDir}/checkVal.txt`, checkVal);
 process.exit(0);

@@ -16,6 +16,8 @@ import { Config, PipelineSetting } from './types';
 /**
  * Get the last commit SHA (Git)
  * @param [full] Get full SHA vs abbreviated
+ * @param [noFail] Catch error and return undefined
+ * @param rootDir Project directory that has git history
  */
 export async function getLastCommitSha(
 	full = true,
@@ -243,10 +245,6 @@ export function removeTrailingSlash(input: string): string {
 export function resolveMixedPath(baseDirAbs: string, inputPath: string): string {
 	inputPath = posixNormalize(inputPath);
 	baseDirAbs = posixNormalize(baseDirAbs);
-	logger.log({
-		inputPath,
-		baseDirAbs,
-	});
 	if (inputPath.includes(baseDirAbs) || isAbsolute(inputPath)) {
 		// Assume input path *IS* full path, if...
 		// - Project root includes absolute root dir
@@ -258,10 +256,16 @@ export function resolveMixedPath(baseDirAbs: string, inputPath: string): string 
 	}
 }
 
+export async function exitProgram(exitCode: number = 0, cleanup?: Array<ChildProcess>) {
+	logger.log(`Exiting`);
+	await stopProgram(cleanup);
+	process.exit(exitCode);
+}
+
 /**
  * Exit the entire program, clean up if necessary
  */
-export async function exitProgram(exitCode: number = 0, cleanup?: Array<ChildProcess>) {
+export async function stopProgram(cleanup?: Array<ChildProcess>) {
 	/**
 	 * Clean up processes
 	 *  - This might still leave detached services / processes
@@ -285,7 +289,8 @@ export async function exitProgram(exitCode: number = 0, cleanup?: Array<ChildPro
 
 	logger.log(`Killing processes - IDs: ${procsToKill.map((proc) => proc.pid)}`);
 	procsToKill.forEach((proc) => proc.kill('SIGINT'));
-
-	logger.log(`Exiting`);
-	process.exit(exitCode);
 }
+
+export const delay = (delayMs: number): Promise<void> => {
+	return new Promise((res) => setTimeout(res, delayMs));
+};

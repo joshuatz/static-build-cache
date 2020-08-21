@@ -8,6 +8,7 @@ import {
 	execAsyncWithCbs,
 	exitProgram,
 	getLastCommitSha,
+	stopProgram,
 } from './utilities';
 
 // Catch SIGINT and close out program
@@ -125,10 +126,15 @@ export async function main(inputConfig: MinConfig) {
 	}
 
 	// Return some control methods
+	/* istanbul ignore next */
 	return {
-		forceExit: () => {
+		forceExit: async () => {
 			logger.log(`Force exiting!`);
-			exitProgram();
+			await exitProgram();
+		},
+		forceStop: async () => {
+			logger.log(`Force stopping!`);
+			await stopProgram();
 		},
 	};
 }

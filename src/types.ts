@@ -25,3 +25,5 @@ export interface PersistedData {
 	commitSha?: string;
 	buildDirName?: string;
 }
+
+export type UnpackedPromise<T> = T extends Promise<infer U> ? U : T;

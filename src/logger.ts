@@ -6,7 +6,13 @@ export const logger = {
 	},
 	warn: (...args: any[]) => {
 		if (!global.SILENT) {
-			console.warn.apply(console, args);
+			// !!! - In NodeJS, console.warn is simply an alias for console.error,
+			// Don't use console.warn unless you want stderr exceptions on warnings...
+			// Instead, we'll prefix messages
+			if (typeof args[0] === 'string' && !/warn/gim.test(args[0])) {
+				args.unshift('Warning!:');
+			}
+			console.log.apply(console, args);
 		}
 	},
 	error: (...args: any[]) => {

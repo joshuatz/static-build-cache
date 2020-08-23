@@ -88,7 +88,15 @@ export const createGitCommit = async (
 		execSync(`git init`, { cwd: repoDir });
 	}
 
-	execSync(`git commit --allow-empty -m "${message}"`, { cwd: repoDir });
+	try {
+		execSync(`git commit --allow-empty -m "${message}"`, { cwd: repoDir });
+	} catch (e) {
+		logger.warn(`Git commit failed. Trying again with GH actions user`);
+		execSync(`git config user.name github-actions`, { cwd: repoDir });
+		execSync(`git config user.email github-actions@github.com`, { cwd: repoDir });
+		execSync(`git commit --allow-empty -m "${message}"`, { cwd: repoDir });
+	}
+
 	shas.long = await getLastCommitSha(true, false, repoDir);
 	shas.short = await getLastCommitSha(false, false, repoDir);
 	return { shas };

@@ -1,5 +1,5 @@
 {
-	"name": "glitch-static-cache",
+	"name": "glitch-static-build-cache",
 	"version": "1.0.0",
 	"description": "Cache your static builds on Glitch to avoid startup times",
 	"main": "dist/main.js",
@@ -8,11 +8,17 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "@TODO"
+		"url": "https://github.com/joshuatz/glitch-static-build-cache.git"
+	},
+	"bugs": {
+		"url": "https://github.com/joshuatz/glitch-static-build-cache/issues"
 	},
 	"license": "MIT",
-	"author": "Joshua Tzucker",
-	"homepage": "@TODO",
+	"author": {
+		"name": "Joshua Tzucker",
+		"url": "https://joshuatz.com/?utm_source=package"
+	},
+	"homepage": "https://github.com/joshuatz/glitch-static-build-cache",
 	"keywords": [
 		"glitch cache",
 		"glitch startup",

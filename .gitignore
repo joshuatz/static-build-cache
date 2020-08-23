@@ -1,8 +1,20 @@
 node_modules
-.yalc
 yarn-error.log
+
+# Builds and artifacts
 build
-dist
-yalc.lock
-scratch.txt
 *.tgz
+yalc.lock
+.yalc
+dist
+.ts-node
+
+# Testing and coverage
+gsc-testruns
+.nyc_output
+coverage
+.debug-log
+
+# Misc
+scratch.*
+scratch

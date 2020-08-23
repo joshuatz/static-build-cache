@@ -7,7 +7,7 @@ import {
 	spawn,
 } from 'child_process';
 import * as fs from 'fs';
-import { normalize } from 'path';
+import { isAbsolute, normalize } from 'path';
 import { PackageJson } from 'type-fest';
 import { BuildCmds, FrameworkDefaults, ServeCmds } from './constants';
 import logger from './logger';
@@ -16,6 +16,8 @@ import { Config, PipelineSetting } from './types';
 /**
  * Get the last commit SHA (Git)
  * @param [full] Get full SHA vs abbreviated
+ * @param [noFail] Catch error and return undefined
+ * @param rootDir Project directory that has git history
  */
 export async function getLastCommitSha(
 	full = true,
@@ -75,7 +77,7 @@ export async function detectPipeline(config: Config): Promise<PipelineSetting | 
 				for (const cmd of BuildCmds.warn) {
 					buildCmd = packageInfo.scripts[cmd] ? cmd : buildCmd;
 					if (buildCmd) {
-						console.warn(`Running with non-standard build cmd, ${buildCmd}`);
+						logger.warn(`Running with non-standard build cmd, ${buildCmd}`);
 						break;
 					}
 				}
@@ -86,7 +88,7 @@ export async function detectPipeline(config: Config): Promise<PipelineSetting | 
 			}
 		}
 	} catch (e) {
-		console.warn(`Could not find package.json at path ${packageJsonPath}`);
+		logger.warn(`Could not find package.json at path ${packageJsonPath}`);
 	}
 
 	// Return framework settings, overriding with any detected specifics
@@ -134,9 +136,9 @@ export async function execAsync(input: string, opts?: ExecSyncOptions): Promise<
 	};
 	return new Promise((res, rej) => {
 		try {
-			const childProc = exec(input, callOpts, (err, out) => {
-				if (err) {
-					rej(err);
+			const childProc = exec(input, callOpts, (err, out, stdErr) => {
+				if (err || stdErr) {
+					rej(err || stdErr);
 					return;
 				}
 
@@ -163,6 +165,7 @@ export async function execAsyncWithCbs(
 	callbacks?: {
 		stdout?: (output: string) => void | Function;
 		stderr?: (output: string) => void | Function;
+		onError?: (error: Error) => void | Function;
 		close?: (output: string) => void | Function;
 		onExit?: (exitCode: number | null, output?: string) => void | Function;
 		receiveProc?: (proc: ChildProcess | ChildProcessWithoutNullStreams) => void;
@@ -184,6 +187,7 @@ export async function execAsyncWithCbs(
 		// Attach listeners
 		const stdoutCb = callbacks?.stdout || (() => {});
 		const stderrCb = callbacks?.stderr || (() => {});
+		const errorCb = callbacks?.onError || (() => {});
 		// Listeners - stdout
 		spawnedProc.stdout.setEncoding(encoding);
 		spawnedProc.stdout.on('data', (data) => {
@@ -216,7 +220,10 @@ export async function execAsyncWithCbs(
 			}
 		});
 
-		spawnedProc.on('error', rej);
+		spawnedProc.on('error', (error) => {
+			errorCb(error);
+			rej(error);
+		});
 	});
 }
 
@@ -240,11 +247,13 @@ export function removeTrailingSlash(input: string): string {
  * @param inputPath Mixed - relative or absolute path
  * @param basedDirAbs Absolute base directory path
  */
-export function resolveMixedPath(inputPath: string, baseDirAbs: string): string {
+export function resolveMixedPath(baseDirAbs: string, inputPath: string): string {
 	inputPath = posixNormalize(inputPath);
 	baseDirAbs = posixNormalize(baseDirAbs);
-	if (inputPath.includes(baseDirAbs)) {
-		// Since project root includes absolute root dir, assume same as full path
+	if (inputPath.includes(baseDirAbs) || isAbsolute(inputPath)) {
+		// Assume input path *IS* full path, if...
+		// - Project root includes absolute root dir
+		// - Input path is determined to be absolute
 		return inputPath;
 	} else {
 		// Assume projectRoot is *relative*
@@ -252,10 +261,16 @@ export function resolveMixedPath(inputPath: string, baseDirAbs: string): string 
 	}
 }
 
+export async function exitProgram(exitCode: number = 0, cleanup?: Array<ChildProcess>) {
+	logger.log(`Exiting`);
+	await stopProgram(cleanup);
+	process.exit(exitCode);
+}
+
 /**
  * Exit the entire program, clean up if necessary
  */
-export async function exitProgram(exitCode: number = 0, cleanup?: Array<ChildProcess>) {
+export async function stopProgram(cleanup?: Array<ChildProcess>) {
 	/**
 	 * Clean up processes
 	 *  - This might still leave detached services / processes
@@ -279,7 +294,8 @@ export async function exitProgram(exitCode: number = 0, cleanup?: Array<ChildPro
 
 	logger.log(`Killing processes - IDs: ${procsToKill.map((proc) => proc.pid)}`);
 	procsToKill.forEach((proc) => proc.kill('SIGINT'));
-
-	logger.log(`Exiting`);
-	process.exit(exitCode);
 }
+
+export const delay = (delayMs: number): Promise<void> => {
+	return new Promise((res) => setTimeout(res, delayMs));
+};

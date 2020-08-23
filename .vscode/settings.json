@@ -11,6 +11,12 @@
 	"[typescript]": {
 		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	},
+	"[yaml]": {
+		"editor.insertSpaces": true,
+		"editor.tabSize": 2,
+		"editor.autoIndent": "advanced",
+		"editor.defaultFormatter": "vscode.configuration-editing"
+	},
 	"editor.codeActionsOnSave": {
 		"source.organizeImports": true
 	}

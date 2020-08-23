@@ -16,6 +16,7 @@ export interface Config {
 	silent: boolean;
 	cacheFileName?: string;
 	serveCmd?: string;
+	servePort: number;
 }
 
 export type MinConfig = Partial<Config>;

@@ -11,10 +11,14 @@ import {
 	stopProgram,
 } from './utilities';
 
-// Catch SIGINT and close out program
-process.on('SIGINT', (signal) => {
-	exitProgram();
+// Catch SIGINT (or other close request) and close out program
+process.on('SIGINT', exitProgram);
+process.on('message', (msg) => {
+	if (msg && msg.action === 'STOP') {
+		exitProgram();
+	}
 });
+process.on('SIGHUP', exitProgram);
 
 export async function main(inputConfig: MinConfig) {
 	const config = await processConfig(inputConfig);
@@ -88,7 +92,7 @@ export async function main(inputConfig: MinConfig) {
 			serveResOutput = output;
 			global.RUNNING_PROCS!.serve = undefined;
 		};
-		logger.log(`Starting serve command @${new Date()}`);
+		logger.log(`Starting serve command @${new Date()}${serveCmd ? `: ${serveCmd}` : ''}`);
 		if (serveCmd) {
 			// Start serve process
 			execAsyncWithCbs(
@@ -106,19 +110,20 @@ export async function main(inputConfig: MinConfig) {
 		} else {
 			// Fallback to serving with bundled serving dependency (must be executed from inside package)
 			logger.warn(
-				`Serve command was not specified. Using bundled server and build directory.`
+				`Serve command was not specified. Using bundled local server and build directory, on port ${config.servePort}`
 			);
 
-			const PORT = 3000;
 			const ws = LocalWebServer.create({
-				port: PORT,
+				port: config.servePort,
 				directory: config.buildDirFull,
 			});
 			global.SERVER = ws.server;
 
 			// Catch server-up
 			ws.server.on('listening', () => {
-				logger.log(`Serving from http://localhost:${PORT} started @${new Date()}`);
+				logger.log(
+					`Serving from http://localhost:${config.servePort} started @${new Date()}`
+				);
 			});
 		}
 	} catch (e) {

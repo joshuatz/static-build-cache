@@ -1,7 +1,6 @@
 import test from 'ava';
 import fse from 'fs-extra';
 import { nanoid } from 'nanoid';
-import { PackageJson } from 'type-fest';
 import { CacheFileName } from '../src/constants';
 import { main } from '../src/main';
 import { PersistedData, UnpackedPromise } from '../src/types';
@@ -11,17 +10,13 @@ import {
 	createGitCommit,
 	getTestRunDir,
 	scaffoldNodeProject,
+	StaticTesterScripts,
 } from './helpers';
 
 let testRunDirPath: string;
 
 const tmpDirPaths: string[] = [];
 const activeRunners: Array<UnpackedPromise<ReturnType<typeof main>>> = [];
-
-const StaticTesterScripts: PackageJson['scripts'] = {
-	build: 'node static-builder.js',
-	serve: 'node static-build-check.js',
-};
 
 test.before(async () => {
 	testRunDirPath = await getTestRunDir();
@@ -37,11 +32,6 @@ test(`Tests simple static build and serve project`, async (t) => {
 		},
 		copyUtils: true,
 		containerDir: testRunDirPath,
-	});
-	console.log({
-		testRunDirPath,
-		folderPath,
-		checkVal,
 	});
 
 	// Create a git commit
@@ -72,11 +62,6 @@ test(`Tests built-in serve functionality, plus caching`, async (t) => {
 		},
 		copyUtils: true,
 		containerDir: testRunDirPath,
-	});
-	console.log({
-		testRunDirPath,
-		folderPath,
-		checkVal,
 	});
 	const cacheFilePath = `${folderPath}/${CacheFileName}`;
 

@@ -1,5 +1,4 @@
 import { PipelineSetting } from './types';
-import { posixNormalize } from './utilities';
 
 export const BuildCmds = {
 	likely: ['build-prod', 'build', 'dist', 'build:browser'],
@@ -32,7 +31,4 @@ export const FrameworkDefaults: Record<UnderstoodFrameworks, PipelineSetting> = 
 export const CacheFileName = '.glitch-cache-meta';
 export const NonGitCacheDurationMs = 1000 * 60 * 60;
 
-/**
- * Package root - no trailing slash
- */
-export const PackageRoot = posixNormalize(`${__dirname}/..`);
+export const NotOnGlitchErrorMsg = 'not on glitch';

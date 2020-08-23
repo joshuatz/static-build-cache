@@ -1,5 +1,136 @@
 import test from 'ava';
+import { ChildProcessWithoutNullStreams } from 'child_process';
+import fse from 'fs-extra';
+import { nanoid } from 'nanoid';
+import treeKill from 'tree-kill';
+import { NotOnGlitchErrorMsg } from '../src/constants';
+import { execAsync, execAsyncWithCbs, posixNormalize } from '../src/utilities';
+import {
+	checkServerResponse,
+	getTestRunDir,
+	scaffoldNodeProject,
+	StaticTesterScripts,
+} from './helpers';
 
-test.skip('Tests typical Creact-React-App starter', (t) => {
-	//
+// How to call CLI
+let testRunDirPath: string;
+// We need to add binaries under local /node_modules to env, so we can use ts-node from anywhere
+const LOCAL_BIN_PATH = posixNormalize(`${__dirname}/../node_modules/.bin`);
+const ENV_WITH_LOCAL_BIN: NodeJS.ProcessEnv = {
+	...process.env,
+	path: `${process.env.path};${LOCAL_BIN_PATH}`,
+};
+const CLI_CALL_PATH = posixNormalize(`${__dirname}/../src/cli.ts`);
+const CLI_CMD_BASE = `ts-node --transpile-only ${CLI_CALL_PATH}`;
+
+// Use a different port than main.test.ts to avoid async conflict
+const TEST_PORT = 3001;
+
+test.before(async () => {
+	testRunDirPath = await getTestRunDir();
+});
+
+test('Does NOT run if not on Glitch, by default', async (t) => {
+	// Scaffold
+	const { folderPath } = await scaffoldNodeProject({
+		scripts: {
+			build: `${StaticTesterScripts.build}`,
+		},
+		copyUtils: true,
+		containerDir: testRunDirPath,
+	});
+
+	// Attempt to run program, without mocking Glitch environment
+	// Without using skip detection flag / override, this should fail
+	await t.throwsAsync(
+		async () => {
+			try {
+				const res = await execAsync(CLI_CMD_BASE, {
+					cwd: folderPath,
+					env: ENV_WITH_LOCAL_BIN,
+				});
+				return res;
+			} catch (e) {
+				// e is not going to be error; it will be string
+				let errorMsg: string = e;
+				// Remove any line breaks for error comparison
+				errorMsg = errorMsg.replace(/[\r\n]/gm, '');
+				// Throw to ava
+				throw new Error(errorMsg);
+			}
+		},
+		{
+			message: NotOnGlitchErrorMsg,
+		}
+	);
+});
+
+test('Full run via CLI', async (t) => {
+	// Scaffold
+	const checkVal = nanoid(10);
+	const { folderPath } = await scaffoldNodeProject({
+		scripts: {
+			build: `${StaticTesterScripts.build} ${checkVal}`,
+		},
+		copyUtils: true,
+		containerDir: testRunDirPath,
+	});
+
+	// Spawn shell for use, catch server start
+	// Give extra time to load up, due to ts-node
+	t.timeout(1000 * 30, 'Extra time given for ts-node transpiling');
+	let childProc: ChildProcessWithoutNullStreams;
+	await new Promise((res, rej) => {
+		execAsyncWithCbs(
+			`${CLI_CMD_BASE}`,
+			[`--port`, `${TEST_PORT}`, `--skipDetection`],
+			{
+				cwd: folderPath,
+				env: ENV_WITH_LOCAL_BIN,
+			},
+			{
+				stdout: (str) => {
+					if (/serving from .+ started/i.test(str)) {
+						// Server is up!
+						res(str);
+					}
+				},
+				onError: rej,
+				receiveProc: (proc) => {
+					childProc = proc;
+				},
+			},
+			false
+		);
+	});
+
+	// Check local server via GET
+	t.truthy(await checkServerResponse(checkVal, TEST_PORT));
+
+	// Stop server, make sure not to leave in detached state
+	/**
+	 * NOTE: Shutting down the server *reliably* and passing
+	 * events like SIGINT through, when going throw spawned shells
+	 * (especially in this convuluted test setup)
+	 * is proving extremely tricky. Using treeKill / killing by PID
+	 * is pretty much the only way I have found guaranteed to stop
+	 * both the spawned shell AND the process (my program) that
+	 * are running inside it.
+	 */
+	await new Promise((res, rej) => {
+		treeKill(childProc.pid, 'SIGINT', (err) => {
+			if (err) {
+				rej(err);
+			} else {
+				res();
+			}
+		});
+	});
+
+	// Make sure server went down...
+	t.false(await checkServerResponse(checkVal, TEST_PORT));
+});
+
+test.after.always(async () => {
+	await fse.remove(testRunDirPath);
 });

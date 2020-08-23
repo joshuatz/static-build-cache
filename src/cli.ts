@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import detectIsOnGlitch from 'detect-is-on-glitch';
 import { PackageJson } from 'type-fest';
+import { NotOnGlitchErrorMsg } from './constants';
 import { main } from './main';
 import { MinConfig } from './types';
+import detectIsOnGlitch = require('detect-is-on-glitch');
+// @ts-ignore
 const PackageRaw = require('../package.json');
 
 const packageInfo: PackageJson = PackageRaw;
@@ -30,23 +32,25 @@ program
 		`Specify the file name you would like for the cache`
 	)
 	.option(`-s, --silent`, `Suppress logging`)
-	.option(`--skipDetection`, `Skip "is on glitch" detection`);
+	.option(`--skipDetection`, `Skip "is on glitch" detection`)
+	.option(`-p, --port <portNum>`, `Port for serving`);
 
 const cli = async () => {
+	program.parse(process.argv);
 	const isOnGlitch = await detectIsOnGlitch();
 	if (program.skipDetection !== true && !isOnGlitch) {
 		// Bail early, and allow chained commands to execute!
 		if (!program.silent) {
-			console.error('not on glitch');
+			console.error(NotOnGlitchErrorMsg);
 		}
 		process.exit(0);
 	} else {
-		program.parse(process.argv);
 		const inputConfig: MinConfig = {
 			projectRoot: program.projectRoot,
 			buildDir: program.buildDir,
 			buildCmd: program.buildCmd,
 			serveCmd: program.serveCmd,
+			servePort: parseInt(program.port, 10),
 			useGit: program.useGit,
 			cacheFileName: program.cacheFileName,
 			silent: program.silent,

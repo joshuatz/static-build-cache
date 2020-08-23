@@ -37,5 +37,6 @@ export async function processConfig(config: MinConfig): Promise<Config> {
 		silent,
 		cacheFileName: !!config.cacheFileName ? config.cacheFileName : CacheFileName,
 		serveCmd: config.serveCmd,
+		servePort: config.servePort || 3000,
 	};
 }

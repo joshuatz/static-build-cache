@@ -77,7 +77,7 @@ export async function detectPipeline(config: Config): Promise<PipelineSetting | 
 				for (const cmd of BuildCmds.warn) {
 					buildCmd = packageInfo.scripts[cmd] ? cmd : buildCmd;
 					if (buildCmd) {
-						console.warn(`Running with non-standard build cmd, ${buildCmd}`);
+						logger.warn(`Running with non-standard build cmd, ${buildCmd}`);
 						break;
 					}
 				}
@@ -88,7 +88,7 @@ export async function detectPipeline(config: Config): Promise<PipelineSetting | 
 			}
 		}
 	} catch (e) {
-		console.warn(`Could not find package.json at path ${packageJsonPath}`);
+		logger.warn(`Could not find package.json at path ${packageJsonPath}`);
 	}
 
 	// Return framework settings, overriding with any detected specifics
@@ -136,9 +136,9 @@ export async function execAsync(input: string, opts?: ExecSyncOptions): Promise<
 	};
 	return new Promise((res, rej) => {
 		try {
-			const childProc = exec(input, callOpts, (err, out) => {
-				if (err) {
-					rej(err);
+			const childProc = exec(input, callOpts, (err, out, stdErr) => {
+				if (err || stdErr) {
+					rej(err || stdErr);
 					return;
 				}
 
@@ -165,6 +165,7 @@ export async function execAsyncWithCbs(
 	callbacks?: {
 		stdout?: (output: string) => void | Function;
 		stderr?: (output: string) => void | Function;
+		onError?: (error: Error) => void | Function;
 		close?: (output: string) => void | Function;
 		onExit?: (exitCode: number | null, output?: string) => void | Function;
 		receiveProc?: (proc: ChildProcess | ChildProcessWithoutNullStreams) => void;
@@ -186,6 +187,7 @@ export async function execAsyncWithCbs(
 		// Attach listeners
 		const stdoutCb = callbacks?.stdout || (() => {});
 		const stderrCb = callbacks?.stderr || (() => {});
+		const errorCb = callbacks?.onError || (() => {});
 		// Listeners - stdout
 		spawnedProc.stdout.setEncoding(encoding);
 		spawnedProc.stdout.on('data', (data) => {
@@ -218,7 +220,10 @@ export async function execAsyncWithCbs(
 			}
 		});
 
-		spawnedProc.on('error', rej);
+		spawnedProc.on('error', (error) => {
+			errorCb(error);
+			rej(error);
+		});
 	});
 }
 

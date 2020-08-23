@@ -4,6 +4,7 @@ import fetch from 'node-fetch';
 import os from 'os';
 import { sep } from 'path';
 import { PackageJson } from 'type-fest';
+import logger from '../../src/logger';
 import { getLastCommitSha, posixNormalize } from '../../src/utilities';
 
 export const utilsDir = `${__dirname}/../fixtures`;
@@ -83,7 +84,7 @@ export const createGitCommit = async (
 	}
 
 	if (forceInit) {
-		console.warn(`Git not found in ${repoDir}, initializing now.`);
+		logger.warn(`Git not found in ${repoDir}, initializing now.`);
 		execSync(`git init`, { cwd: repoDir });
 	}
 
@@ -108,7 +109,6 @@ export const checkServerResponse = async (expectedVal: string, port = 3000) => {
 			foundVal = matches[1];
 		}
 	} catch (e) {
-		console.error(e);
 		return false;
 	}
 
@@ -120,4 +120,9 @@ export const getRandStr = (len: number) => {
 		.fill(0)
 		.map(() => Math.random().toString(36).charAt(2))
 		.join('');
+};
+
+export const StaticTesterScripts: PackageJson['scripts'] = {
+	build: 'node static-builder.js',
+	serve: 'node static-build-check.js',
 };

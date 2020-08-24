@@ -6,6 +6,9 @@
 	"bin": {
 		"static-build-cache": "dist/cli.js"
 	},
+	"files": [
+		"dist"
+	],
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/joshuatz/static-build-cache.git"
@@ -29,9 +32,9 @@
 		"build": "yarn clean && tsc",
 		"build-local": "yarn clean && tsc --sourceMap && yalc push",
 		"build-zip": "yarn build && npm pack",
-		"format": "yarn prettier --check src",
-		"test": "ava",
-		"coverage": "nyc ava",
+		"lint": "yarn prettier --check src __tests__",
+		"test": "yarn lint && nyc --reporter=lcov ava",
+		"test-nocov": "yarn lint && ava",
 		"list-files": "yalc publish --files"
 	},
 	"dependencies": {

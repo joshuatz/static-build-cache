@@ -11,7 +11,7 @@ import {
 	getTestRunDir,
 	scaffoldNodeProject,
 	StaticTesterScripts,
-} from './helpers';
+} from './utils';
 
 let testRunDirPath: string;
 

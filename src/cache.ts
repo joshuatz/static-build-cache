@@ -75,7 +75,7 @@ export async function canServeFromCache(
 					: 'last git SHA changed - something was edited',
 			};
 		} catch (e) {
-			// If this is running Glitch, `git` should be available...
+			// The best use of this tool is in a git tracked environment
 			logger.warn(`Use of git log failed:`, e);
 		}
 

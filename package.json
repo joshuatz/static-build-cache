@@ -1,28 +1,27 @@
 {
-	"name": "glitch-static-build-cache",
+	"name": "static-build-cache",
 	"version": "1.0.0",
-	"description": "Cache your static builds on Glitch to avoid startup times",
-	"main": "dist/main.js",
+	"description": "Cache your static builds to avoid startup times",
+	"main": "dist/index.js",
 	"bin": {
-		"glitch-cache": "dist/cli.js"
+		"static-build-cache": "dist/cli.js"
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/joshuatz/glitch-static-build-cache.git"
+		"url": "https://github.com/joshuatz/static-build-cache.git"
 	},
 	"bugs": {
-		"url": "https://github.com/joshuatz/glitch-static-build-cache/issues"
+		"url": "https://github.com/joshuatz/static-build-cache/issues"
 	},
 	"license": "MIT",
 	"author": {
 		"name": "Joshua Tzucker",
 		"url": "https://joshuatz.com/?utm_source=package"
 	},
-	"homepage": "https://github.com/joshuatz/glitch-static-build-cache",
+	"homepage": "https://github.com/joshuatz/static-build-cache",
 	"keywords": [
-		"glitch cache",
-		"glitch startup",
-		"glitch.com"
+		"build cache",
+		"static build startup"
 	],
 	"scripts": {
 		"dev": "yarn clean && nodemon -e js,ts --ignore dist --exec \"tsc --sourceMap && yalc push --changed\"",
@@ -37,7 +36,6 @@
 	},
 	"dependencies": {
 		"commander": "^6.0.0",
-		"detect-is-on-glitch": "^1.0.0",
 		"local-web-server": "^4.2.1"
 	},
 	"devDependencies": {

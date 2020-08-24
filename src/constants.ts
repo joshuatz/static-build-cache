@@ -28,7 +28,5 @@ export const FrameworkDefaults: Record<UnderstoodFrameworks, PipelineSetting> = 
 	},
 };
 
-export const CacheFileName = '.glitch-cache-meta';
+export const CacheFileName = '.static-build-cache-meta';
 export const NonGitCacheDurationMs = 1000 * 60 * 60;
-
-export const NotOnGlitchErrorMsg = 'not on glitch';

@@ -235,11 +235,13 @@ export async function execAsyncWithCbs(
  * @returns The posix foward slashed version of the input
  */
 export function posixNormalize(filePath: string): string {
-	return removeTrailingSlash(normalize(filePath).replace(/[\/\\]{1,2}/gm, '/'));
-}
-
-export function removeTrailingSlash(input: string): string {
-	return input.replace(/\/{1,}$/, '');
+	return (
+		normalize(filePath)
+			// Replace all slashes with forward slash
+			.replace(/[\/\\]{1,2}/gm, '/')
+			// Remove trailing slashes
+			.replace(/\/{1,}$/, '')
+	);
 }
 
 /**

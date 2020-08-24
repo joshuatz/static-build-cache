@@ -821,11 +821,6 @@ command-line-usage@^6.1.0:
     table-layout "^1.0.0"
     typical "^5.2.0"
 
-commander@^5.1.0:
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/commander/-/commander-5.1.0.tgz#46abbd1652f8e059bddaef99bbdcb2ad9cf179ae"
-  integrity sha512-P0CysNDQ7rtVw4QIQtm+MRxV66vKFSvlsQvGYXZWR3qFU0jlMKHZZZgw8e+8DSah4UDKMqnknRDQz+xuQXQ/Zg==
-
 commander@^6.0.0:
   version "6.0.0"
   resolved "https://registry.yarnpkg.com/commander/-/commander-6.0.0.tgz#2b270da94f8fb9014455312f829a1129dbf8887e"
@@ -1061,13 +1056,6 @@ destroy@^1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/destroy/-/destroy-1.0.4.tgz#978857442c44749e4206613e37946205826abd80"
   integrity sha1-l4hXRCxEdJ5CBmE+N5RiBYJqvYA=
-
-detect-is-on-glitch@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/detect-is-on-glitch/-/detect-is-on-glitch-1.0.0.tgz#df6828e2802df02c2b94da2db670e5d20d00fa1f"
-  integrity sha512-NYmj9rPaKuklvaxOIFpgPDG5vNEtK23TbEXPKQ2BEWYYL7I0n2kG4qt/7pS1lZK5JkH6KPnPYiT77aQHwRGP7Q==
-  dependencies:
-    commander "^5.1.0"
 
 diff@^4.0.1:
   version "4.0.2"

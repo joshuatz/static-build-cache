@@ -12,13 +12,22 @@ import {
 } from './utilities';
 
 // Catch SIGINT (or other close request) and close out program
-process.on('SIGINT', exitProgram);
+[
+	`SIGINT`,
+	`exit`,
+	`SIGUSR1`,
+	`SIGUSR2`,
+	`uncaughtException`,
+	`SIGTERM`,
+	`SIGHUP`,
+].forEach((eventType) => {
+	process.on(eventType, exitProgram);
+});
 process.on('message', (msg) => {
 	if (msg && msg.action === 'STOP') {
 		exitProgram();
 	}
 });
-process.on('SIGHUP', exitProgram);
 
 export async function main(inputConfig: MinConfig) {
 	const config = await processConfig(inputConfig);

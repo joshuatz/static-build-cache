@@ -3,15 +3,14 @@ import { ChildProcessWithoutNullStreams } from 'child_process';
 import fse from 'fs-extra';
 import { nanoid } from 'nanoid';
 import treeKill from 'tree-kill';
-import { NotOnGlitchErrorMsg } from '../src/constants';
 import logger from '../src/logger';
-import { execAsync, execAsyncWithCbs, posixNormalize } from '../src/utilities';
+import { execAsyncWithCbs, posixNormalize } from '../src/utilities';
 import {
 	checkServerResponse,
 	getTestRunDir,
 	scaffoldNodeProject,
 	StaticTesterScripts,
-} from './helpers';
+} from './utils';
 
 // How to call CLI
 let testRunDirPath: string;
@@ -29,41 +28,6 @@ const TEST_PORT = 3001;
 
 test.before(async () => {
 	testRunDirPath = await getTestRunDir();
-});
-
-test('Does NOT run if not on Glitch, by default', async (t) => {
-	// Scaffold
-	const { folderPath } = await scaffoldNodeProject({
-		scripts: {
-			build: `${StaticTesterScripts.build}`,
-		},
-		copyUtils: true,
-		containerDir: testRunDirPath,
-	});
-
-	// Attempt to run program, without mocking Glitch environment
-	// Without using skip detection flag / override, this should fail
-	await t.throwsAsync(
-		async () => {
-			try {
-				const res = await execAsync(CLI_CMD_BASE, {
-					cwd: folderPath,
-					env: ENV_WITH_LOCAL_BIN,
-				});
-				return res;
-			} catch (e) {
-				// e is not going to be error; it will be string
-				let errorMsg: string = e;
-				// Remove any line breaks for error comparison
-				errorMsg = errorMsg.replace(/[\r\n]/gm, '');
-				// Throw to ava
-				throw new Error(errorMsg);
-			}
-		},
-		{
-			message: NotOnGlitchErrorMsg,
-		}
-	);
 });
 
 test('Full run via CLI', async (t) => {
@@ -84,7 +48,7 @@ test('Full run via CLI', async (t) => {
 	await new Promise((res, rej) => {
 		execAsyncWithCbs(
 			`${CLI_CMD_BASE}`,
-			[`--port`, `${TEST_PORT}`, `--skipDetection`],
+			[`--port`, `${TEST_PORT}`],
 			{
 				cwd: folderPath,
 				env: ENV_WITH_LOCAL_BIN,

@@ -1,2 +1,2 @@
-# Glitch-Static-Build-Cache
+# Static-Build-Cache
 @TODO Put wonderful README content here! :)

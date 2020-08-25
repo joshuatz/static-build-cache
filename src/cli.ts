@@ -22,7 +22,7 @@ export const getProgram = () => {
 	program
 		.version(packageInfo.version!)
 		.name(packageInfo.name!)
-		.option(`-p, --projectRoot <directoryStr>`, `App root directory`)
+		.option(`-d, --projectRoot <directoryStr>`, `App root directory`)
 		.option(`-o, --buildDir <directoryStr>`, `App build directory`)
 		.option(`-b, --buildCmd <commandStr>`, `Command string to trigger build`)
 		.option(`-s, --serveCmd <commandStr>`, `Command string to trigger "serving"`)
@@ -32,7 +32,8 @@ export const getProgram = () => {
 			`Specify the file name you would like for the cache`
 		)
 		.option(`-s, --silent`, `Suppress logging`)
-		.option(`-p, --port <portNum>`, `Port for serving`);
+		.option(`-v, --verbose`, `Turn on extra logging`)
+		.option(`-p, --servePort <portNum>`, `Port for serving`);
 	return program;
 };
 
@@ -45,10 +46,11 @@ const cli = async () => {
 		buildDir: program.buildDir,
 		buildCmd: program.buildCmd,
 		serveCmd: program.serveCmd,
-		servePort: parseInt(program.port, 10),
+		servePort: parseInt(program.servePort, 10),
 		useGit: program.useGit,
 		cacheFileName: program.cacheFileName,
 		silent: program.silent,
+		verbose: program.verbose,
 	};
 
 	await main(inputConfig);

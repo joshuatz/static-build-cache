@@ -10,7 +10,7 @@ import * as fs from 'fs';
 import { isAbsolute, normalize } from 'path';
 import { PackageJson } from 'type-fest';
 import { BuildCmds, FrameworkDefaults, ServeCmds } from './constants';
-import logger from './logger';
+import { logger, verboseLogger } from './logger';
 import { Config, PipelineSetting } from './types';
 
 /**
@@ -290,11 +290,11 @@ export async function stopProgram(cleanup?: Array<ChildProcess>) {
 	}
 
 	if (global.SERVER && typeof global.SERVER.close === 'function') {
-		logger.log('Shutting down server');
+		verboseLogger.log('Shutting down server');
 		await new Promise((res) => global.SERVER!.close(res));
 	}
 
-	logger.log(`Killing processes - IDs: ${procsToKill.map((proc) => proc.pid)}`);
+	verboseLogger.log(`Killing processes - IDs: ${procsToKill.map((proc) => proc.pid)}`);
 	procsToKill.forEach((proc) => proc.kill('SIGINT'));
 }
 

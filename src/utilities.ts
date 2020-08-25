@@ -118,8 +118,12 @@ export async function detectPipeline(config: Config): Promise<PipelineSetting | 
 		// NodeJS script runner prefix
 		if (hasPackageJson) {
 			const packRunPrefix = `npm run `;
-			info.buildCmd = info.buildCmd ? `${packRunPrefix}${info.buildCmd}` : info.buildCmd;
-			info.serveCmd = info.serveCmd ? `${packRunPrefix}${info.serveCmd}` : info.serveCmd;
+			info.buildCmd = info.buildCmd
+				? `${packRunPrefix}${info.buildCmd}`
+				: info.buildCmd;
+			info.serveCmd = info.serveCmd
+				? `${packRunPrefix}${info.serveCmd}`
+				: info.serveCmd;
 		}
 
 		return info;

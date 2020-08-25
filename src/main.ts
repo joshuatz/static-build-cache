@@ -93,7 +93,9 @@ export async function main(inputConfig: MinConfig) {
 			serveResOutput = output;
 			global.RUNNING_PROCS!.serve = undefined;
 		};
-		logger.log(`Starting serve command @${new Date()}${serveCmd ? `: ${serveCmd}` : ''}`);
+		logger.log(
+			`Starting serve command @${new Date()}${serveCmd ? `: ${serveCmd}` : ''}`
+		);
 		if (serveCmd) {
 			// Start serve process
 			execAsyncWithCbs(
@@ -123,7 +125,9 @@ export async function main(inputConfig: MinConfig) {
 			// Catch server-up
 			ws.server.on('listening', () => {
 				logger.log(
-					`Serving from http://localhost:${config.servePort} started @${new Date()}`
+					`Serving from http://localhost:${
+						config.servePort
+					} started @${new Date()}`
 				);
 			});
 		}

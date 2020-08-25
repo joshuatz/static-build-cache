@@ -48,7 +48,7 @@ test('Full run via CLI', async (t) => {
 	await new Promise((res, rej) => {
 		execAsyncWithCbs(
 			`${CLI_CMD_BASE}`,
-			[`--port`, `${TEST_PORT}`],
+			[`--servePort`, `${TEST_PORT}`, `--verbose`],
 			{
 				cwd: folderPath,
 				env: ENV_WITH_LOCAL_BIN,

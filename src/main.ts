@@ -1,7 +1,7 @@
 import LocalWebServer = require('local-web-server');
 import { canServeFromCache, writeDataToFile } from './cache';
 import { processConfig } from './config';
-import logger from './logger';
+import { logger, verboseLogger } from './logger';
 import { MinConfig, PersistedData } from './types';
 import {
 	detectPipeline,
@@ -49,14 +49,6 @@ export async function main(inputConfig: MinConfig) {
 		stderr: logger.error.bind(logger),
 	};
 
-	// @TODO - remove me
-	logger.log({
-		config,
-		pipelineSettings,
-		buildCmd,
-		serveCmd,
-	});
-
 	const cacheResult = await canServeFromCache(config);
 	const needsFreshBuild = !cacheResult.canServe;
 
@@ -85,7 +77,7 @@ export async function main(inputConfig: MinConfig) {
 			commitSha: lastCommitSha,
 		};
 		const cacheFilePath = await writeDataToFile(cacheData, config);
-		logger.log(`Fresh build finished @${new Date()}`, {
+		verboseLogger.log(`Fresh build finished @${new Date()}`, {
 			buildResult,
 			cacheFilePath,
 			cacheData,
@@ -118,7 +110,7 @@ export async function main(inputConfig: MinConfig) {
 			).then(onServeDone);
 		} else {
 			// Fallback to serving with bundled serving dependency (must be executed from inside package)
-			logger.warn(
+			verboseLogger.warn(
 				`Serve command was not specified. Using bundled local server and build directory, on port ${config.servePort}`
 			);
 
@@ -143,11 +135,11 @@ export async function main(inputConfig: MinConfig) {
 	/* istanbul ignore next */
 	return {
 		forceExit: async () => {
-			logger.log(`Force exiting!`);
+			verboseLogger.log(`Force exiting!`);
 			await exitProgram();
 		},
 		forceStop: async () => {
-			logger.log(`Force stopping!`);
+			verboseLogger.log(`Force stopping!`);
 			await stopProgram();
 		},
 	};

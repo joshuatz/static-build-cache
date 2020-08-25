@@ -1,15 +1,18 @@
 import { CacheFileName } from './constants';
-import { logger } from './logger';
+import { verboseLogger } from './logger';
 import { Config, MinConfig } from './types';
 import { posixNormalize, resolveMixedPath } from './utilities';
 
 export async function processConfig(config: MinConfig): Promise<Config> {
 	const silent: boolean = typeof config.silent === 'boolean' ? config.silent : false;
 	global.SILENT = config.silent;
-	logger.log(`Processing config`);
+	const verbose: boolean =
+		typeof config.verbose === 'boolean' && !silent ? config.verbose : false;
+	global.VERBOSE = verbose;
+	verboseLogger.log(`Processing config`);
 
 	if (!config.projectRoot) {
-		logger.warn(
+		verboseLogger.warn(
 			`Config did not specify project root; program will assume same as calling dir.`
 		);
 		config.projectRoot = '.';
@@ -35,6 +38,7 @@ export async function processConfig(config: MinConfig): Promise<Config> {
 		buildCmd: config.buildCmd,
 		useGit: typeof config.useGit === 'boolean' ? config.useGit : true,
 		silent,
+		verbose,
 		cacheFileName: !!config.cacheFileName ? config.cacheFileName : CacheFileName,
 		serveCmd: config.serveCmd,
 		servePort: config.servePort || 3000,

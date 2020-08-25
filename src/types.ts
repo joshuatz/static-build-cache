@@ -14,6 +14,7 @@ export interface Config {
 	buildCmd?: string;
 	useGit: boolean;
 	silent: boolean;
+	verbose: boolean;
 	cacheFileName?: string;
 	serveCmd?: string;
 	servePort: number;

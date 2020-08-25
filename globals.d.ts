@@ -9,6 +9,7 @@ declare namespace NodeJS {
 		};
 		SERVER?: Server;
 		SILENT?: boolean;
+		VERBOSE?: boolean;
 	}
 }
 

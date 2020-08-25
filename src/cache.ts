@@ -65,27 +65,28 @@ export async function canServeFromCache(
 		}
 
 		// Check git for changes
-		try {
-			const lastCommitSha = await getLastCommitSha(true, false, config.projectRootFull);
-			const lastShaIsSame: boolean = lastCommitSha === storedMeta.commitSha;
-			return {
-				canServe: lastShaIsSame,
-				reason: lastShaIsSame
-					? 'last git SHA is identical'
-					: 'last git SHA changed - something was edited',
-			};
-		} catch (e) {
-			// The best use of this tool is in a git tracked environment
-			logger.warn(`Use of git log failed:`, e);
+		if (config.useGit) {
+			try {
+				const lastCommitSha = await getLastCommitSha(true, false, config.projectRootFull);
+				const lastShaIsSame: boolean = lastCommitSha === storedMeta.commitSha;
+				return {
+					canServe: lastShaIsSame,
+					reason: lastShaIsSame
+						? 'last git SHA is identical'
+						: 'last git SHA changed - something was edited',
+				};
+			} catch (e) {
+				// The best use of this tool is in a git tracked environment
+				logger.warn(`Use of git log failed:`, e);
+			}
 		}
 
 		// Fallback - check build time
 		const now = new Date();
 		const sinceLastBuildMs = Math.abs((storedMeta.builtAt || 0) - now.getTime());
-		logger.log({ sinceLastBuildMs });
 		return {
 			canServe: sinceLastBuildMs < NonGitCacheDurationMs,
-			reason: `Based on elapsed since last build time`,
+			reason: `Based on elapsed since last build time (${sinceLastBuildMs})`,
 		};
 	} catch (e) {
 		return {

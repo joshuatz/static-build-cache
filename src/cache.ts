@@ -67,7 +67,11 @@ export async function canServeFromCache(
 		// Check git for changes
 		if (config.useGit) {
 			try {
-				const lastCommitSha = await getLastCommitSha(true, false, config.projectRootFull);
+				const lastCommitSha = await getLastCommitSha(
+					true,
+					false,
+					config.projectRootFull
+				);
 				const lastShaIsSame: boolean = lastCommitSha === storedMeta.commitSha;
 				return {
 					canServe: lastShaIsSame,

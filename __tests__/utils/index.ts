@@ -50,7 +50,10 @@ export const scaffoldNodeProject = async (options: {
 
 	if (copyUtils) {
 		const copyPromises = utilFileNames.map((utilFileName) => {
-			return fse.copyFile(`${utilsDir}/${utilFileName}`, `${folderPath}/${utilFileName}`);
+			return fse.copyFile(
+				`${utilsDir}/${utilFileName}`,
+				`${folderPath}/${utilFileName}`
+			);
 		});
 		await Promise.all(copyPromises);
 	}

@@ -32,7 +32,8 @@
 		"build": "yarn clean && tsc",
 		"build-local": "yarn clean && tsc --sourceMap && yalc push",
 		"build-zip": "yarn build && npm pack",
-		"lint": "yarn prettier --check src __tests__",
+		"lint": "prettier --check src __tests__",
+		"fix": "prettier --write src __tests__",
 		"test": "yarn lint && nyc --reporter=lcov ava",
 		"test-nocov": "yarn lint && ava",
 		"list-files": "yalc publish --files"

@@ -1,7 +1,5 @@
-> NOTE: This has not yet been pushed to NPM. I will update when I do. (@TODO)
-
 # Static-Build-Cache
-![NodeJS CI Passing Status Badge](https://github.com/joshuatz/static-build-cache/workflows/Node.js%20CI/badge.svg)
+![NodeJS CI Passing Status Badge](https://github.com/joshuatz/static-build-cache/workflows/Node.js%20CI/badge.svg) [![Code Coverage Badge](https://codecov.io/gh/joshuatz/static-build-cache/branch/main/graph/badge.svg)](https://codecov.io/gh/joshuatz/static-build-cache/branch/main) ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/joshuatz/static-build-cache) [![NPM Badge](https://img.shields.io/npm/v/static-build-cache)](https://www.npmjs.com/package/static-build-cache)
 
 > This is a tool meant to help avoid redundant builds for projects that use a typical "build and serve" pipeline for static content. E.g. projects that use React without a backend, Gatsby, docs, etc.
 
@@ -97,7 +95,10 @@ Most of the development environment is pretty standard. However, one important t
 ## Change Notes
 Version | Date | Notes
 --- | --- | ---
-v1.0.0 | @TOOD | @TODO
+v0.1.0 | 8/25/2020 | Initial release! 🚀
+
+## Known Issues
+Currently, this tool relies exclusively on Git to track whether or not source code has changed. This means it will not properly cache the build folder outside of it. Theoretically, so that it could be used outside of any VC system, I could add code to track some sort of combined hash representing the file structure and contents of source code, and use that to determine changes.
 
 ## About Me:
 

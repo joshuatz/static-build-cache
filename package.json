@@ -1,6 +1,6 @@
 {
 	"name": "static-build-cache",
-	"version": "1.0.0",
+	"version": "0.1.0",
 	"description": "Cache your static builds to avoid startup times",
 	"main": "dist/index.js",
 	"bin": {

@@ -7,8 +7,11 @@
 		"static-build-cache": "dist/cli.js"
 	},
 	"files": [
-		"dist"
+		"dist/"
 	],
+	"engines": {
+		"node": ">=10"
+	},
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/joshuatz/static-build-cache.git"

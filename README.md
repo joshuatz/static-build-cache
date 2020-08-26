@@ -17,7 +17,13 @@ So I created this. Instead of calling `build && serve`, you call this tool, and 
 A tool similar to this one *probably* exists somewhere out there already. Regardless, this was a fun learning experience for me, and fits my needs.
 
 ## Installation
-@TODO: Publish on NPM and provide link
+In most cases, should probably be a dev dependency:
+
+`yarn add static-build-cache -D`
+
+Or
+
+`npm install static-build-cache --save-dev`
 
 ## Usage
 
